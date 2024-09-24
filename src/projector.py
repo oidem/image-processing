@@ -154,93 +154,96 @@ def rotate2D(data, rotdata, A3d, debug=False):
 
     return
 
-#def project(vol, A3d, factor=1, debug=False):
-#    Ainv = A3d.T
-#
-#    # 0 = z, 1 = y, 2 = x
-#    boxsize = vol.shape[0]
-#    padsize = boxsize * factor
-#    margin = int((padsize - boxsize) / 2)
-#
-#    vol_pad = np.pad(vol, (margin,margin))
-#
-#    f3d = fft.fftshift(fft.fft2(fft.fftshift(vol_pad)))
-#    f2d = np.zeros((padsize,padsize), dtype=complex)
-#
-#    if debug:
-#        print('boxsize: ', boxsize)
-#
-#    radius = np.zeros(3, dtype=int)
-#    for i in range(3):
-#        radius[i] = math.floor(padsize / 2) - 1
-#
-#    if debug:
-#        print('radius: ', radius)
-#
-#    rmax_out: int = radius.min()
-#
-#    rmax_ref: int = rmax_out
-#    rmax_ref_2: int = rmax_ref * rmax_ref
-#
-#    # define starting to access logical coordinates
-#    starting = np.array([1 - padsize/2, 1 - padsize/2, 1 - padsize/2], dtype=int)
-#
-#    for i in range(f2d.shape[0]):
-#        y = i + starting[0]
-#
-#        for j in range(f2d.shape[1]):
-#            x = j + starting[1]
-#
-#            xu = x - 0.5
-#            yu = y - 0.5
-#
-#            xp = Ainv[0,0] * xu + Ainv[0,1] * yu
-#            yp = Ainv[1,0] * xu + Ainv[1,1] * yu
-#            zp = Ainv[2,0] * xu + Ainv[2,1] * yu
-#
-#            r_ref_2 = xp * xp + yp * yp + zp * zp
-#            if (r_ref_2 > rmax_ref_2):
-#                continue
-#
-#            z0 = np.floor(zp + 0.5)
-#            fz = zp + 0.5 - z0
-#            z0 -= starting[0]
-#            z1:int = z0 + 1
-#
-#            y0 = np.floor(yp + 0.5)
-#            fy = yp + 0.5 - y0
-#            y0 -= starting[1]
-#            y1:int = y0 + 1
-#
-#            x0:int = np.floor(xp + 0.5)
-#            fx = xp + 0.5 - x0
-#            x0 -= starting[2]
-#            x1 = x0 + 1
-#
-#            if x0 < 0 or x1 > f3d.shape[2] or y0 < 0 or y1 > f3d.shape[1] or z0 < 0 or z1 > f3d.shape[0]:
-#                continue
-#
-#            d000 = f3d[int(z0),int(y0),int(x0)]
-#            d001 = f3d[int(z0),int(y0),int(x1)]
-#            d010 = f3d[int(z0),int(y1),int(x0)]
-#            d011 = f3d[int(z0),int(y1),int(x1)]
-#            d100 = f3d[int(z1),int(y0),int(x0)]
-#            d101 = f3d[int(z1),int(y0),int(x1)]
-#            d110 = f3d[int(z1),int(y1),int(x0)]
-#            d111 = f3d[int(z1),int(y1),int(x1)]
-#
-#            dx00 = linterp(fx, d000, d001)
-#            dx01 = linterp(fx, d010, d011)
-#            dx10 = linterp(fx, d100, d101)
-#            dx11 = linterp(fx, d110, d111)
-#            dxy0 = linterp(fy, dx00, dx01)
-#            dxy1 = linterp(fy, dx10, dx11)
-#
-#            f2d[i,j] = linterp(fz, dxy0, dxy1)
-#
-#    return copy.deepcopy(fft.ifftshift(fft.ifft2(fft.ifftshift(f2d))).real)
+def project(vol, A3d, factor=1, debug=False):
+    Ainv = A3d.T
 
-def project(vol, image, a3d):
+    # 0 = z, 1 = y, 2 = x
+    boxsize = vol.shape[0]
+    padsize = boxsize * factor
+    m = int((padsize - boxsize) / 2)
+
+    vol_pad = np.pad(vol, (m,m))
+
+    f3d = fft.fftshift(fft.fftn(fft.fftshift(vol_pad),s=(padsize,padsize,padsize)))
+    f2d = np.zeros((padsize,padsize), dtype=complex)
+
+    if debug:
+        print('boxsize: ', boxsize)
+
+    radius = np.zeros(3, dtype=int)
+    for i in range(3):
+        radius[i] = math.floor(padsize / 2) - 1
+
+    if debug:
+        print('radius: ', radius)
+
+    rmax_out: int = radius.min()
+
+    rmax_ref: int = rmax_out
+    rmax_ref_2: int = rmax_ref * rmax_ref
+
+    # define starting to access logical coordinates
+    starting = np.array([1 - padsize/2, 1 - padsize/2, 1 - padsize/2], dtype=int)
+
+    for i in range(f2d.shape[0]):
+        y = i + starting[0]
+
+        for j in range(f2d.shape[1]):
+            x = j + starting[1]
+
+            xu = x - 0.5
+            yu = y - 0.5
+
+            xp = Ainv[0,0] * xu + Ainv[0,1] * yu
+            yp = Ainv[1,0] * xu + Ainv[1,1] * yu
+            zp = Ainv[2,0] * xu + Ainv[2,1] * yu
+
+            r_ref_2 = xp * xp + yp * yp + zp * zp
+            if (r_ref_2 > rmax_ref_2):
+                continue
+
+            z0 = np.floor(zp + 0.5)
+            fz = zp + 0.5 - z0
+            z0 -= starting[0]
+            z1:int = z0 + 1
+
+            y0 = np.floor(yp + 0.5)
+            fy = yp + 0.5 - y0
+            y0 -= starting[1]
+            y1:int = y0 + 1
+
+            x0:int = np.floor(xp + 0.5)
+            fx = xp + 0.5 - x0
+            x0 -= starting[2]
+            x1 = x0 + 1
+
+            if x0 < 0 or x1 > f3d.shape[2] or y0 < 0 or y1 > f3d.shape[1] or z0 < 0 or z1 > f3d.shape[0]:
+                continue
+
+            d000 = f3d[int(z0),int(y0),int(x0)]
+            d001 = f3d[int(z0),int(y0),int(x1)]
+            d010 = f3d[int(z0),int(y1),int(x0)]
+            d011 = f3d[int(z0),int(y1),int(x1)]
+            d100 = f3d[int(z1),int(y0),int(x0)]
+            d101 = f3d[int(z1),int(y0),int(x1)]
+            d110 = f3d[int(z1),int(y1),int(x0)]
+            d111 = f3d[int(z1),int(y1),int(x1)]
+
+            dx00 = linterp(fx, d000, d001)
+            dx01 = linterp(fx, d010, d011)
+            dx10 = linterp(fx, d100, d101)
+            dx11 = linterp(fx, d110, d111)
+            dxy0 = linterp(fy, dx00, dx01)
+            dxy1 = linterp(fy, dx10, dx11)
+
+            f2d[i,j] = linterp(fz, dxy0, dxy1)
+
+    img_pad = fft.ifftshift(fft.ifft2(fft.ifftshift(f2d))).real
+
+    return copy.deepcopy(img_pad[m:boxsize+m,m:boxsize+m])
+
+# projection in real-space
+def rproject(vol, image, a3d):
 
     debug = False
 
