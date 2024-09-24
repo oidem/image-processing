@@ -211,7 +211,7 @@ def reconstruct(f3d, weight, debug=False):
         for j in range(boxsize[1]):
             jp = j + starting[1]
             for i in range(boxsize[2]):
-                ip = j + starting[2]
+                ip = i + starting[2]
 
                 r2 = (kp -0.5)*(kp -0.5) + (jp -0.5)*(jp -0.5) + (ip -0.5)*(ip -0.5)
                 if (r2 < rmax_ref_2):
@@ -230,7 +230,7 @@ def reconstruct(f3d, weight, debug=False):
         for j in range(boxsize[1]):
             jp = j + starting[1]
             for i in range(boxsize[2]):
-                ip = j + starting[2]
+                ip = i + starting[2]
 
                 r2 = (kp -0.5)*(kp -0.5) + (jp -0.5)*(jp -0.5) + (ip -0.5)*(ip -0.5)
                 ires = np.floor(np.sqrt(r2))
